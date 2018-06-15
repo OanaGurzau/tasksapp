@@ -3,9 +3,14 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Task;
 
 class TasksController extends Controller
 {
+  public function __construct(){
+    $this->middleware('auth', ['except' => ['index', 'show']]);
+  }
+
     /**
      * Display a listing of the resource.
      *
@@ -13,7 +18,8 @@ class TasksController extends Controller
      */
     public function index()
     {
-        //
+        $tasks = Task::orderBy('created_at', 'desc')->get();
+        return view('tasks')->with('tasks', $tasks);
     }
 
     /**
@@ -23,7 +29,7 @@ class TasksController extends Controller
      */
     public function create()
     {
-        //
+        return view('createtask');
     }
 
     /**
@@ -34,7 +40,20 @@ class TasksController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $this->validate($request, [
+          'name'=>'required',
+
+        ]);
+
+        // Create  tasks
+        $task = new Task;
+        $task->name = $request->input('name');
+        $task->description = $request->input('description', false);
+        $task->user_id = auth()->user()->id;
+
+        $task->save();
+
+        return redirect('/home')->with('success', 'Task-ul a fost adaugat!');
     }
 
     /**
@@ -45,7 +64,9 @@ class TasksController extends Controller
      */
     public function show($id)
     {
-        //
+      $task = Task::find($id);
+
+        return view('showtask')->with('task', $task);
     }
 
     /**
@@ -56,7 +77,9 @@ class TasksController extends Controller
      */
     public function edit($id)
     {
-        //
+      $task = Task::find($id);
+
+        return view('edittask')->with('task', $task);
     }
 
     /**
@@ -68,7 +91,20 @@ class TasksController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+      $this->validate($request, [
+        'name'=>'required',
+
+      ]);
+
+      // Create  tasks
+      $task = Task::find($id);
+      $task->name = $request->input('name');
+      $task->description = $request->input('description', false);
+      $task->user_id = auth()->user()->id;
+
+      $task->save();
+
+      return redirect('/home')->with('success', 'Task-ul a fost editat cu success!');
     }
 
     /**
@@ -79,6 +115,9 @@ class TasksController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $task= Task::find($id);
+        $task->delete();
+
+      return redirect('/home')->with('success', 'Task-ul a fost eliminat cu succes!');
     }
 }
